@@ -19,9 +19,9 @@ var should = require('should'),
 var listing, id, latitude, longitude;
 
 listing =  {
-  code: "LBWEST", 
-  name: "Library West", 
-  address: "1545 W University Ave, Gainesville, FL 32603, United States"
+  code: "TEST", 
+  name: "Jeremy House", 
+  address: "2800 SW 35th Pl"
 }
 
 describe('Listing Schema Unit Tests', function() {

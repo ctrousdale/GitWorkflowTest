@@ -25,7 +25,7 @@ var mongoose = require('mongoose'),
 exports.create = function(req, res) {
 
   /* Instantiate a Listing */
-  var listing = new Listing(req.body);
+    var listing = new Listing(req.body);
 
   /* save the coordinates (located in req.results if there is an address property) */
   if(req.results) {
@@ -42,7 +42,7 @@ exports.create = function(req, res) {
       res.status(400).send(err);
     } else {
       res.json(listing);
-      console.log(listing)
+        console.log(listing);
     }
   });
 };
@@ -54,28 +54,100 @@ exports.read = function(req, res) {
 };
 
 /* Update a listing - note the order in which this function is called by the router*/
-exports.update = function(req, res) {
-  var listing = req.listing;
+exports.update = function (req, res) {
+    
+    if (!req.body) {
+        return res.status(400).send();
+    }
+    var listing = req.listing;
 
-  /* Replace the listings's properties with the new properties found in req.body */
- 
-  /*save the coordinates (located in req.results if there is an address property) */
- 
-  /* Save the listing */
+/* Replace the listings's properties with the new properties found in req.body */
+
+    listing.body = req.body;
+/*save the coordinates (located in req.results if there is an address property) */
+    if (req.results) {
+        listing.body.coordinates = req.results;
+    }
+/* Save the listing */
+
+
+    // Find note and update it with the request body
+    Listing.findByIdAndUpdate(req.params.listingId, {
+        coordinates: req.body.coordinates,
+        code: req.body.code,
+        name: req.body.name,
+        address: req.body.address,
+        created_at: req.body.created_at,
+        updated_at: req.body.updated_at
+    }, { new: true })
+        .then(note => {
+            if (!note) {
+                return res.status(404).send({
+                    message: "Note not found with id " + req.params.listingId
+                });
+            }
+            res.send(note);
+        }).catch(err => {
+            if (err.kind === 'ObjectId') {
+                return res.status(404).send({
+                    message: "Note not found with id " + req.params.listingId
+                });
+            }
+            return res.status(500).send({
+                message: "Error updating note with id " + req.params.listingId
+            });
+        });
 
 };
 
 /* Delete a listing */
 exports.delete = function(req, res) {
-  var listing = req.listing;
+    var listing = req.listing;
 
-  /* Add your code to remove the listins */
+    Listing.findByIdAndRemove(req.params.listingId)
+        .then(listing => {
+            if (!listing) {
+                return res.status(404).send({
+                    message: "Note not found with id " + req.params.listingId
+                });
+            }
+            res.send({ message: "Note deleted successfully!" });
+        }).catch(err => {
+            if (err.kind === 'ObjectId' || err.name === 'NotFound') {
+                return res.status(404).send({
+                    message: "Note not found with id " + req.params.listingId
+                });
+            }
+            return res.status(500).send({
+                message: "Could not delete note with id " + req.params.listingId
+            });
+        });
+
+    //listing.body = req.body;
+/* Add your code to remove the listing */
+    /*
+    async function remove() {
+        const result = await Listing.findOneAndDelete(listing.body);
+        if (result === null) {
+            res.status(400);
+            console.log("Listing:" + listing + "has already been deleted");
+        } else {
+            res.json(result);
+            console.log(result);
+        }
+    }
+    remove();*/
 
 };
 
 /* Retreive all the directory listings, sorted alphabetically by listing code */
 exports.list = function(req, res) {
-  /* Add your code */
+    async function retrieveAll() {
+        let listing = await Listing.find();
+        console.log("Successfully Retrieved All Listings"); 
+        res.json(listing);
+    }
+    retrieveAll();
 };
 
 /* 
